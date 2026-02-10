@@ -1,0 +1,10 @@
+# Profiling configuration - extends base docker-compose.yml
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.profiling.yml up
+
+services:
+  backend:
+    environment:
+      ENABLE_PPROF: "true"
+    ports:
+      - "8080:8080"
+      - "6060:6060"  # Optional: if you want a separate profiling port

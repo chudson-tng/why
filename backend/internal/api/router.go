@@ -2,6 +2,7 @@ package api
 
 import (
 	"database/sql"
+	"net/http/pprof"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -37,6 +38,25 @@ func NewRouter(db *sql.DB, minio *minio.Client, cfg *config.Config) *gin.Engine 
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{"status": "ok"})
 	})
+
+	// Profiling endpoints (pprof) - only enabled when ENABLE_PPROF=true
+	if cfg.EnablePprof {
+		pprofGroup := r.Group("/debug/pprof")
+		{
+			pprofGroup.GET("/", gin.WrapF(pprof.Index))
+			pprofGroup.GET("/cmdline", gin.WrapF(pprof.Cmdline))
+			pprofGroup.GET("/profile", gin.WrapF(pprof.Profile))
+			pprofGroup.POST("/symbol", gin.WrapF(pprof.Symbol))
+			pprofGroup.GET("/symbol", gin.WrapF(pprof.Symbol))
+			pprofGroup.GET("/trace", gin.WrapF(pprof.Trace))
+			pprofGroup.GET("/allocs", gin.WrapH(pprof.Handler("allocs")))
+			pprofGroup.GET("/block", gin.WrapH(pprof.Handler("block")))
+			pprofGroup.GET("/goroutine", gin.WrapH(pprof.Handler("goroutine")))
+			pprofGroup.GET("/heap", gin.WrapH(pprof.Handler("heap")))
+			pprofGroup.GET("/mutex", gin.WrapH(pprof.Handler("mutex")))
+			pprofGroup.GET("/threadcreate", gin.WrapH(pprof.Handler("threadcreate")))
+		}
+	}
 
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(db, cfg)

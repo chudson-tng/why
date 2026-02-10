@@ -11,6 +11,7 @@ type Config struct {
 	MinIO        MinIOConfig
 	OTLPEndpoint string
 	JWTSecret    string
+	EnablePprof  bool
 }
 
 type MinIOConfig struct {
@@ -27,6 +28,7 @@ func Load() (*Config, error) {
 		PostgresURL:  getEnv("POSTGRES_URL", ""),
 		OTLPEndpoint: getEnv("OTLP_ENDPOINT", "alloy.monitoring.svc.cluster.local:4317"),
 		JWTSecret:    getEnv("JWT_SECRET", "your-secret-key-change-in-production"),
+		EnablePprof:  getEnv("ENABLE_PPROF", "false") == "true",
 		MinIO: MinIOConfig{
 			Endpoint:        getEnv("MINIO_ENDPOINT", "loki-minio.monitoring.svc.cluster.local:9000"),
 			AccessKeyID:     getEnv("MINIO_ACCESS_KEY", "loki"),

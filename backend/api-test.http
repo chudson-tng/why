@@ -1,0 +1,198 @@
+### Why Backend API Tests
+### Use with VSCode REST Client extension or IntelliJ HTTP Client
+
+@baseUrl = http://localhost:8080
+@email = test@example.com
+@password = password123
+
+### Health Check
+GET {{baseUrl}}/health
+
+### Metrics Endpoint
+GET {{baseUrl}}/metrics
+
+###
+### Authentication Tests
+###
+
+### Signup - Create new user
+# @name signup
+POST {{baseUrl}}/api/v1/signup
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}"
+}
+
+### Extract token from signup response
+@token = {{signup.response.body.token}}
+
+### Login - Get JWT token
+# @name login
+POST {{baseUrl}}/api/v1/login
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}"
+}
+
+### Login with wrong password (should fail)
+POST {{baseUrl}}/api/v1/login
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "wrongpassword"
+}
+
+### Signup with invalid email (should fail)
+POST {{baseUrl}}/api/v1/signup
+Content-Type: application/json
+
+{
+  "email": "not-an-email",
+  "password": "{{password}}"
+}
+
+### Signup with short password (should fail)
+POST {{baseUrl}}/api/v1/signup
+Content-Type: application/json
+
+{
+  "email": "test2@example.com",
+  "password": "short"
+}
+
+###
+### Message Tests (Public)
+###
+
+### List all messages (public endpoint)
+GET {{baseUrl}}/api/v1/messages
+
+### Get single message
+GET {{baseUrl}}/api/v1/messages/{{messageId}}
+
+### Get nonexistent message (should return 404)
+GET {{baseUrl}}/api/v1/messages/00000000-0000-0000-0000-000000000000
+
+###
+### Message Tests (Protected - require auth)
+###
+
+### Create message (requires authentication)
+# @name createMessage
+POST {{baseUrl}}/api/v1/messages
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "content": "Hello, this is a test message!",
+  "media_urls": []
+}
+
+### Extract message ID
+@messageId = {{createMessage.response.body.id}}
+
+### Create message without auth (should fail)
+POST {{baseUrl}}/api/v1/messages
+Content-Type: application/json
+
+{
+  "content": "This should fail - no auth"
+}
+
+### Create message with invalid token (should fail)
+POST {{baseUrl}}/api/v1/messages
+Content-Type: application/json
+Authorization: Bearer invalid.token.here
+
+{
+  "content": "This should fail - invalid token"
+}
+
+### Create message without content (should fail)
+POST {{baseUrl}}/api/v1/messages
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "content": "",
+  "media_urls": []
+}
+
+### Create message with media URLs
+POST {{baseUrl}}/api/v1/messages
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "content": "Message with media",
+  "media_urls": ["https://example.com/image1.jpg", "https://example.com/image2.jpg"]
+}
+
+###
+### Reply Tests
+###
+
+### List replies for a message
+GET {{baseUrl}}/api/v1/messages/{{messageId}}/replies
+
+### Create reply (requires authentication)
+# @name createReply
+POST {{baseUrl}}/api/v1/messages/{{messageId}}/replies
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "content": "This is a reply to the message",
+  "media_urls": []
+}
+
+### Create reply without auth (should fail)
+POST {{baseUrl}}/api/v1/messages/{{messageId}}/replies
+Content-Type: application/json
+
+{
+  "content": "This should fail - no auth"
+}
+
+### Create reply without content (should fail)
+POST {{baseUrl}}/api/v1/messages/{{messageId}}/replies
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "content": "",
+  "media_urls": []
+}
+
+###
+### Media Upload Tests
+###
+
+### Upload media file (requires authentication)
+# Note: Update the file path to a real image
+POST {{baseUrl}}/api/v1/media
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="file"; filename="test.jpg"
+Content-Type: image/jpeg
+
+< ./test-image.jpg
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+### Upload media without auth (should fail)
+POST {{baseUrl}}/api/v1/media
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="file"; filename="test.jpg"
+Content-Type: image/jpeg
+
+< ./test-image.jpg
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
