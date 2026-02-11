@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import SignupPage from '../page'
 import * as auth from '@/lib/auth'
@@ -97,8 +97,10 @@ describe('SignupPage', () => {
     expect(screen.getByRole('button', { name: /creating account/i })).toBeDisabled()
 
     // Clean up - resolve the promise to prevent it from interfering with other tests
-    resolvePromise!()
-    await promise
+    await act(async () => {
+      resolvePromise!()
+      await promise
+    })
   })
 
   it('should display error message on signup failure', async () => {

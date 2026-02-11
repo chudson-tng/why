@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import MessageForm from '../MessageForm'
 import * as api from '@/lib/api'
@@ -130,8 +130,10 @@ describe('MessageForm', () => {
     expect(screen.getByRole('button', { name: /posting/i })).toBeDisabled()
 
     // Clean up - resolve the promise to prevent it from interfering with other tests
-    resolvePromise!()
-    await promise
+    await act(async () => {
+      resolvePromise!()
+      await promise
+    })
   })
 
   it('should display error message on submission failure', async () => {
