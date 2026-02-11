@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import ReplyForm from '../ReplyForm'
 import * as api from '@/lib/api'
@@ -114,9 +114,12 @@ describe('ReplyForm', () => {
 
   it('should show loading state during submission', async () => {
     const user = userEvent.setup()
-    ;(api.createReply as jest.Mock).mockImplementation(
-      () => new Promise(resolve => setTimeout(resolve, 100))
-    )
+    let resolvePromise: () => void
+    const promise = new Promise<void>((resolve) => {
+      resolvePromise = resolve
+    })
+
+    ;(api.createReply as jest.Mock).mockReturnValue(promise)
 
     render(<ReplyForm messageId={mockMessageId} onSuccess={mockOnSuccess} />)
 
@@ -128,6 +131,12 @@ describe('ReplyForm', () => {
 
     expect(screen.getByRole('button', { name: /replying/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /replying/i })).toBeDisabled()
+
+    // Clean up - resolve the promise to prevent it from interfering with other tests
+    await act(async () => {
+      resolvePromise!()
+      await promise
+    })
   })
 
   it('should display error message on submission failure', async () => {
