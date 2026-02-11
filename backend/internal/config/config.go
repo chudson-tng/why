@@ -5,13 +5,44 @@ import (
 	"os"
 )
 
+// postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}?sslmode=${POSTGRES_SSLMODE}
 type Config struct {
 	Port         string
-	PostgresURL  string
+	Postgres     PostgresConfig
 	MinIO        MinIOConfig
 	OTLPEndpoint string
 	JWTSecret    string
 	EnablePprof  bool
+}
+
+func (c *Config) PostgresURL() string {
+	// Validate that all required fields are set
+	if c.Postgres.User == "unset" ||
+		c.Postgres.Password == "unset" ||
+		c.Postgres.Host == "unset" ||
+		c.Postgres.Port == "unset" ||
+		c.Postgres.DB == "unset" ||
+		c.Postgres.SSLMode == "unset" {
+		return ""
+	}
+	return fmt.Sprintf(
+		"postgres://%s:%s@%s:%s/%s?sslmode=%s",
+		c.Postgres.User,
+		c.Postgres.Password,
+		c.Postgres.Host,
+		c.Postgres.Port,
+		c.Postgres.DB,
+		c.Postgres.SSLMode,
+	)
+}
+
+type PostgresConfig struct {
+	User     string
+	Password string
+	Host     string
+	Port     string
+	DB       string
+	SSLMode  string
 }
 
 type MinIOConfig struct {
@@ -24,8 +55,15 @@ type MinIOConfig struct {
 
 func Load() (*Config, error) {
 	cfg := &Config{
-		Port:         getEnv("PORT", "8080"),
-		PostgresURL:  getEnv("POSTGRES_URL", ""),
+		Port: getEnv("PORT", "8080"),
+		Postgres: PostgresConfig{
+			User:     getEnv("POSTGRES_USER", "unset"),
+			Password: getEnv("POSTGRES_PASSWORD", "unset"),
+			Host:     getEnv("POSTGRES_HOST", "unset"),
+			Port:     getEnv("POSTGRES_PORT", "unset"),
+			DB:       getEnv("POSTGRES_DB", "unset"),
+			SSLMode:  getEnv("POSTGRES_SSLMODE", "unset"),
+		},
 		OTLPEndpoint: getEnv("OTLP_ENDPOINT", "alloy.monitoring.svc.cluster.local:4317"),
 		JWTSecret:    getEnv("JWT_SECRET", "your-secret-key-change-in-production"),
 		EnablePprof:  getEnv("ENABLE_PPROF", "false") == "true",
@@ -38,8 +76,8 @@ func Load() (*Config, error) {
 		},
 	}
 
-	if cfg.PostgresURL == "" {
-		return nil, fmt.Errorf("POSTGRES_URL is required")
+	if cfg.PostgresURL() == "" {
+		return nil, fmt.Errorf("POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_HOST, POSTGRES_PORT, POSTGRES_DB and POSTGRES_SSLMODE are required")
 	}
 
 	return cfg, nil

@@ -18,20 +18,25 @@ func TestLoad(t *testing.T) {
 		{
 			name: "all environment variables set",
 			envVars: map[string]string{
-				"PORT":                "9090",
-				"POSTGRES_URL":        "postgres://user:pass@localhost:5432/testdb",
-				"OTLP_ENDPOINT":       "custom-otlp:4317",
-				"JWT_SECRET":          "custom-secret",
-				"MINIO_ENDPOINT":      "custom-minio:9000",
-				"MINIO_ACCESS_KEY":    "customkey",
-				"MINIO_SECRET_KEY":    "customsecret",
-				"MINIO_BUCKET":        "custom-bucket",
-				"MINIO_USE_SSL":       "true",
+				"PORT":              "9090",
+				"POSTGRES_USER":     "user",
+				"POSTGRES_PASSWORD": "pass",
+				"POSTGRES_HOST":     "localhost",
+				"POSTGRES_PORT":     "5432",
+				"POSTGRES_DB":       "testdb",
+				"POSTGRES_SSLMODE":  "disable",
+				"OTLP_ENDPOINT":     "custom-otlp:4317",
+				"JWT_SECRET":        "custom-secret",
+				"MINIO_ENDPOINT":    "custom-minio:9000",
+				"MINIO_ACCESS_KEY":  "customkey",
+				"MINIO_SECRET_KEY":  "customsecret",
+				"MINIO_BUCKET":      "custom-bucket",
+				"MINIO_USE_SSL":     "true",
 			},
 			wantErr: false,
 			check: func(t *testing.T, cfg *Config) {
 				assert.Equal(t, "9090", cfg.Port)
-				assert.Equal(t, "postgres://user:pass@localhost:5432/testdb", cfg.PostgresURL)
+				assert.Equal(t, "postgres://user:pass@localhost:5432/testdb?sslmode=disable", cfg.PostgresURL())
 				assert.Equal(t, "custom-otlp:4317", cfg.OTLPEndpoint)
 				assert.Equal(t, "custom-secret", cfg.JWTSecret)
 				assert.Equal(t, "custom-minio:9000", cfg.MinIO.Endpoint)
@@ -44,19 +49,24 @@ func TestLoad(t *testing.T) {
 		{
 			name: "defaults are used when env vars not set",
 			envVars: map[string]string{
-				"POSTGRES_URL": "postgres://localhost:5432/db",
+				"POSTGRES_USER":     "user",
+				"POSTGRES_PASSWORD": "pass",
+				"POSTGRES_HOST":     "localhost",
+				"POSTGRES_PORT":     "5432",
+				"POSTGRES_DB":       "db",
+				"POSTGRES_SSLMODE":  "disable",
 			},
 			wantErr: false,
 			check: func(t *testing.T, cfg *Config) {
-				assert.Equal(t, "8080", cfg.Port) // Default
-				assert.Equal(t, "alloy.monitoring.svc.cluster.local:4317", cfg.OTLPEndpoint) // Default
-				assert.Equal(t, "your-secret-key-change-in-production", cfg.JWTSecret) // Default
+				assert.Equal(t, "8080", cfg.Port)                                              // Default
+				assert.Equal(t, "alloy.monitoring.svc.cluster.local:4317", cfg.OTLPEndpoint)   // Default
+				assert.Equal(t, "your-secret-key-change-in-production", cfg.JWTSecret)         // Default
 				assert.Equal(t, "loki-minio.monitoring.svc.cluster.local:9000", cfg.MinIO.Endpoint) // Default
-				assert.False(t, cfg.MinIO.UseSSL) // Default
+				assert.False(t, cfg.MinIO.UseSSL)                                              // Default
 			},
 		},
 		{
-			name: "missing required POSTGRES_URL",
+			name: "missing required postgres configuration",
 			envVars: map[string]string{
 				"PORT": "8080",
 			},
@@ -65,8 +75,13 @@ func TestLoad(t *testing.T) {
 		{
 			name: "MINIO_USE_SSL false",
 			envVars: map[string]string{
-				"POSTGRES_URL":  "postgres://localhost:5432/db",
-				"MINIO_USE_SSL": "false",
+				"POSTGRES_USER":     "user",
+				"POSTGRES_PASSWORD": "pass",
+				"POSTGRES_HOST":     "localhost",
+				"POSTGRES_PORT":     "5432",
+				"POSTGRES_DB":       "db",
+				"POSTGRES_SSLMODE":  "disable",
+				"MINIO_USE_SSL":     "false",
 			},
 			wantErr: false,
 			check: func(t *testing.T, cfg *Config) {
@@ -76,8 +91,13 @@ func TestLoad(t *testing.T) {
 		{
 			name: "MINIO_USE_SSL any other value",
 			envVars: map[string]string{
-				"POSTGRES_URL":  "postgres://localhost:5432/db",
-				"MINIO_USE_SSL": "yes",
+				"POSTGRES_USER":     "user",
+				"POSTGRES_PASSWORD": "pass",
+				"POSTGRES_HOST":     "localhost",
+				"POSTGRES_PORT":     "5432",
+				"POSTGRES_DB":       "db",
+				"POSTGRES_SSLMODE":  "disable",
+				"MINIO_USE_SSL":     "yes",
 			},
 			wantErr: false,
 			check: func(t *testing.T, cfg *Config) {

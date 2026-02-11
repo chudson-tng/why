@@ -44,7 +44,7 @@ func main() {
 	}
 
 	// Initialize database
-	db, err := storage.InitDB(ctx, cfg.PostgresURL)
+	db, err := storage.InitDB(ctx, cfg.PostgresURL())
 	if err != nil {
 		slog.ErrorContext(ctx, "Failed to initialize database", "error", err)
 		log.Fatalf("Failed to initialize database: %v", err)

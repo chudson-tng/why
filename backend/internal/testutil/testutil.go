@@ -7,6 +7,7 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
+
 	"why-backend/internal/config"
 )
 
@@ -20,8 +21,15 @@ func SetupTestDB(t *testing.T) (*sql.DB, sqlmock.Sqlmock) {
 // GetTestConfig returns a test configuration
 func GetTestConfig() *config.Config {
 	return &config.Config{
-		Port:         "8080",
-		PostgresURL:  "postgres://test:test@localhost:5432/test",
+		Port: "8080",
+		Postgres: config.PostgresConfig{
+			User:     "test",
+			Password: "test",
+			Host:     "localhost",
+			Port:     "5432",
+			DB:       "test",
+			SSLMode:  "disable",
+		},
 		JWTSecret:    "test-secret-key-for-testing-only",
 		OTLPEndpoint: "localhost:4317",
 		MinIO: config.MinIOConfig{
