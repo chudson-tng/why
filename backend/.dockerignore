@@ -1,0 +1,14 @@
+.git
+.gitignore
+*.md
+.env
+.env.*
+coverage.out
+coverage.html
+bin/
+profiles/
+docker-compose.yml
+docker-compose.profiling.yml
+Makefile
+*.sh
+**/*_test.go

@@ -1,0 +1,17 @@
+node_modules
+.next
+.git
+.gitignore
+README.md
+TESTING.md
+*.md
+.env*.local
+coverage
+playwright-report
+test-results
+e2e
+**/__tests__
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+.eslintrc.json
