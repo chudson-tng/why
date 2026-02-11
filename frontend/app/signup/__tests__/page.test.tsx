@@ -80,9 +80,12 @@ describe('SignupPage', () => {
 
   it('should show loading state during signup', async () => {
     const user = userEvent.setup()
-    ;(auth.signup as jest.Mock).mockImplementation(
-      () => new Promise(resolve => setTimeout(resolve, 100))
-    )
+    let resolvePromise: () => void
+    const promise = new Promise<void>((resolve) => {
+      resolvePromise = resolve
+    })
+
+    ;(auth.signup as jest.Mock).mockReturnValue(promise)
 
     render(<SignupPage />)
 
@@ -92,6 +95,10 @@ describe('SignupPage', () => {
 
     expect(screen.getByRole('button', { name: /creating account/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /creating account/i })).toBeDisabled()
+
+    // Clean up - resolve the promise to prevent it from interfering with other tests
+    resolvePromise!()
+    await promise
   })
 
   it('should display error message on signup failure', async () => {
@@ -108,10 +115,7 @@ describe('SignupPage', () => {
       expect(screen.getByText('Email already exists')).toBeInTheDocument()
     })
 
-    // Wait a bit for any pending state updates
-    await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledTimes(0)
-    })
+    expect(mockPush).not.toHaveBeenCalled()
   })
 
   it('should display generic error when error has no message', async () => {

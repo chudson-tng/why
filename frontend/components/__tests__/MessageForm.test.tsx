@@ -111,9 +111,12 @@ describe('MessageForm', () => {
 
   it('should show loading state during submission', async () => {
     const user = userEvent.setup()
-    ;(api.createMessage as jest.Mock).mockImplementation(
-      () => new Promise(resolve => setTimeout(resolve, 100))
-    )
+    let resolvePromise: () => void
+    const promise = new Promise<void>((resolve) => {
+      resolvePromise = resolve
+    })
+
+    ;(api.createMessage as jest.Mock).mockReturnValue(promise)
 
     render(<MessageForm onSuccess={mockOnSuccess} />)
 
@@ -125,6 +128,10 @@ describe('MessageForm', () => {
 
     expect(screen.getByRole('button', { name: /posting/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /posting/i })).toBeDisabled()
+
+    // Clean up - resolve the promise to prevent it from interfering with other tests
+    resolvePromise!()
+    await promise
   })
 
   it('should display error message on submission failure', async () => {

@@ -75,9 +75,12 @@ describe('LoginPage', () => {
 
   it('should show loading state during login', async () => {
     const user = userEvent.setup()
-    ;(auth.login as jest.Mock).mockImplementation(
-      () => new Promise(resolve => setTimeout(resolve, 100))
-    )
+    let resolvePromise: () => void
+    const promise = new Promise<void>((resolve) => {
+      resolvePromise = resolve
+    })
+
+    ;(auth.login as jest.Mock).mockReturnValue(promise)
 
     render(<LoginPage />)
 
@@ -87,6 +90,10 @@ describe('LoginPage', () => {
 
     expect(screen.getByRole('button', { name: /signing in/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /signing in/i })).toBeDisabled()
+
+    // Clean up - resolve the promise to prevent it from interfering with other tests
+    resolvePromise!()
+    await promise
   })
 
   it('should display error message on login failure', async () => {
